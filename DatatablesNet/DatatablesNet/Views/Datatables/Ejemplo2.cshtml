@@ -1,0 +1,139 @@
+﻿@model IEnumerable<DatatablesNet.Models.Contacto>
+@{
+    ViewBag.Title = "Ejemplo2";
+}
+
+@section headSection {
+}
+
+@section scripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#example').DataTable({
+                columns: [
+                    //Extraigo la definicion de las columnas desde el mismo modelo.
+                    //En este ejemplo la ubicación de las columnas se establece segun el orden de los atributos en el modelo.
+                    @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto)))
+                ],
+                //Serialize List
+                aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+            });
+
+        });
+    </script>
+}
+
+<h2>Index</h2>
+
+
+<p>Definición de columnas y datos tomados desde una Lista pasada como modelo.<br />
+    El metodo utilizado para crear la definición de las columnas en función de los atributos del modelo esta ubicado en la clase
+    Auxiliares\DataTablesAux.cs. Es llamado <b>ColumnsFromModel</b> y lo que hace es, recorrer cada atributo de la clase, extrayendo su
+    nombre, displayName y tipo.<br />
+    Por defecto, las columnas apareceran en el orden en que aparecen los atributos en la clase.
+    En el proximo ejemplo se verá como definir, desde la vista, el orden en que deseamos mostrar las columnas.
+</p>
+<a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+    View Source Code - Ver Codigo Fuente
+</a>
+<div class="collapse" id="collapseExample">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#html1" aria-controls="html1" role="tab" data-toggle="tab">HTML</a></li>
+        <li role="presentation"><a href="#javascript1" aria-controls="javascript1" role="tab" data-toggle="tab">Javascript</a></li>
+        <li role="presentation"><a href="#css1" aria-controls="css1" role="tab" data-toggle="tab">CSS</a></li>
+        <li role="presentation"><a href="#csharp1" aria-controls="csharp1" role="tab" data-toggle="tab">C# (Backend)</a></li>
+        <li role="presentation"><a href="#csharp1_2" aria-controls="csharp1_2" role="tab" data-toggle="tab">C# (ColumnsFromModel)</a></li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="html1">
+            <pre>
+<code class="language-html">&lt;table id=&quot;example&quot; class=&quot;display&quot; cellspacing=&quot;0&quot; width=&quot;100%&quot;&gt;
+    &lt;thead&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;        
+    &lt;/tbody&gt;
+&lt;/table&gt;</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="javascript1">
+            <pre>
+<code class="language-javascript">$(document).ready(function () {
+    $('#example').DataTable({
+        columns: [
+                //Extraigo la definicion de las columnas desde el mismo modelo.
+                //En este ejemplo la ubicación de las columnas se establece segun el orden de los atributos en el modelo.
+                @@Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto)))
+            ],
+        //Serialize List
+        aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+    });
+});</code>
+            </pre>
+        </div>
+
+        <div role="tabpanel" class="tab-pane" id="css1">...</div>
+        <div role="tabpanel" class="tab-pane" id="csharp1">
+            <pre>
+<code class="language-csharp">public ActionResult Ejemplo2()
+{   
+    return View(Contactos);
+}</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="csharp1_2">
+            <pre>
+<code class="language-csharp">public static string ColumnsFromModel(Type modelType, List&lt;string&gt; ColumnsOrder = null)
+{
+    PropertyInfo[] props = modelType.GetProperties(); //Obtengo todos los atributos de la clase
+    int cantidadDeColumnas = props.Count();
+    if (ColumnsOrder == null)
+        ColumnsOrder = new List&lt;string&gt;();
+    else
+        cantidadDeColumnas = ColumnsOrder.Count;
+    string[] listHeaderDefinition = new string[cantidadDeColumnas];
+    for(int i= 0; i &lt; props.Count(); i++)
+    {
+        PropertyInfo prop = props[i];
+        string attributeName = prop.Name;
+        //Asumo que todos los atributos estan decorados por &quot;Display&quot;, el cual
+        //utilizamos para definir cual sera el texto de esa columna.
+        DisplayAttribute displayAttribute = prop.GetCustomAttributes(typeof(DisplayAttribute), false).First() as DisplayAttribute;
+        string displayName = displayAttribute.Name; //Lo extraigo.
+        //Segun el tipo del atributo, lo mapeo a su correspondiente tipo en Datatables
+        string sType = prop.PropertyType.ToString().ToLower();
+        string sTipo = &quot;string&quot;; //Type por defecto.
+        if (sType.IndexOf(&quot;int&quot;) &gt;= 0 || sType.IndexOf(&quot;double&quot;) &gt;= 0 || sType.IndexOf(&quot;float&quot;) &gt;= 0 ||
+            sType.IndexOf(&quot;real&quot;) &gt;= 0 || sType.IndexOf(&quot;single&quot;) &gt;= 0)
+        {
+            sTipo = &quot;num&quot;;
+        }
+        else if (sType.IndexOf(&quot;date&quot;) &gt;= 0)
+        {
+            sTipo = &quot;custom-date&quot;; //Este es un tipo customizado, creado para que las fechas se adapten al formato dd/MM/yyyy
+        }
+        int position = ColumnsOrder.FindIndex(c =&gt; c.ToLower().Trim().Equals(attributeName.ToLower().Trim()));
+        if (position &lt; 0)
+        {
+            position = i;
+        }
+        listHeaderDefinition[position] = &quot;\t\t{ \&quot;aTargets\&quot;: [&quot;+ position + &quot;], \&quot;name\&quot;: \&quot;&quot; + attributeName + &quot;\&quot;, \&quot;title\&quot;: \&quot;&quot; + displayName + &quot;\&quot;, \&quot;type\&quot;: \&quot;&quot; + sTipo + &quot;\&quot;, \&quot;data\&quot;: \&quot;&quot; + attributeName + &quot;\&quot; }&quot;;
+    }
+    string headerDefinition = String.Join(&quot;,\n&quot;, listHeaderDefinition);
+    
+    return headerDefinition;
+}</code>
+            </pre>
+        </div>
+    </div>
+
+</div>
+
+<br /><br />
+
+<table id="example" class="display" cellspacing="0" width="100%">
+    <thead></thead>
+    <tbody></tbody>
+</table>
