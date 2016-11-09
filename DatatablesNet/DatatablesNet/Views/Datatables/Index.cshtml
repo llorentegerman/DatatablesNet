@@ -1,0 +1,142 @@
+﻿@model IEnumerable<DatatablesNet.Models.Contacto>
+@{
+    ViewBag.Title = "Index";
+}
+
+@section headSection {
+}
+
+@section scripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#example').DataTable({
+                "columns": [
+                    { "data": "Id" },
+                    { "data": "Nombre" },
+                    { "data": "Apellido" },
+                    { "data": "Localidad" },
+                    { "data": "Telefono" },
+                    { "data": "Direccion" },
+                    { "data": "Email" }
+                ],
+                //Serialize List
+                aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+            });
+
+        });
+    </script>
+}
+
+<h2>Index</h2>
+
+
+<p>Inicialización basica con Datos tomados desde una Lista pasada como modelo.</p>
+<a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+    View Source Code - Ver Codigo Fuente
+</a>
+<div class="collapse" id="collapseExample">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#html1" aria-controls="html1" role="tab" data-toggle="tab">HTML</a></li>
+        <li role="presentation"><a href="#javascript1" aria-controls="javascript1" role="tab" data-toggle="tab">Javascript</a></li>
+        <li role="presentation"><a href="#css1" aria-controls="css1" role="tab" data-toggle="tab">CSS</a></li>
+        <li role="presentation"><a href="#csharp1" aria-controls="csharp1" role="tab" data-toggle="tab">C# (Backend)</a></li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="html1">
+            <pre>
+<code class="language-html">&lt;table id=&quot;example&quot; class=&quot;display&quot; cellspacing=&quot;0&quot; width=&quot;100%&quot;&gt;
+    &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Id&lt;/th&gt;
+            &lt;th&gt;Nombre&lt;/th&gt;
+            &lt;th&gt;Apellido&lt;/th&gt;
+            &lt;th&gt;Localidad&lt;/th&gt;
+            &lt;th&gt;Tel&#233;fono&lt;/th&gt;
+            &lt;th&gt;Direcci&#243;n&lt;/th&gt;
+            &lt;th&gt;Email&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tfoot&gt;
+        &lt;tr&gt;
+            &lt;th&gt;Id&lt;/th&gt;
+            &lt;th&gt;Nombre&lt;/th&gt;
+            &lt;th&gt;Apellido&lt;/th&gt;
+            &lt;th&gt;Localidad&lt;/th&gt;
+            &lt;th&gt;Tel&#233;fono&lt;/th&gt;
+            &lt;th&gt;Direcci&#243;n&lt;/th&gt;
+            &lt;th&gt;Email&lt;/th&gt;
+        &lt;/tr&gt;
+    &lt;/tfoot&gt;
+    &lt;tbody&gt;        
+    &lt;/tbody&gt;
+&lt;/table&gt;</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="javascript1">
+            <pre>
+<code class="language-javascript">$(document).ready(function () {
+    $('#example').DataTable({
+        "columns": [ 
+            //Se debe crear este array para indicarle a la tabla, cuales son los atributos que representan a cada columna.
+            //Por ejemplo, el atributo Id de cada uno de los objetos pasados por 'aaData' representa a la primer columna,
+            //el campo Nombre a la segunda columna, y asi sucesivamente.
+            { "data": "Id" },
+            { "data": "Nombre" },
+            { "data": "Apellido" },
+            { "data": "Localidad" },
+            { "data": "Telefono" },
+            { "data": "Direccion" },
+            { "data": "Email" }
+        ],
+        //Serialize List
+        aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+    });
+});</code>
+            </pre>
+        </div>
+
+        <div role="tabpanel" class="tab-pane" id="css1">...</div>
+        <div role="tabpanel" class="tab-pane" id="csharp1">
+            <pre>
+            <code class="language-csharp">public ActionResult Index()
+{   
+    return View(Contactos);
+}</code>
+            </pre>
+        </div>
+    </div>
+
+</div>
+
+<br /><br />
+
+<table id="example" class="display" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Localidad</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Email</th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <th>Id</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Localidad</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Email</th>
+        </tr>
+    </tfoot>
+    <tbody>
+        
+    </tbody>
+</table>
