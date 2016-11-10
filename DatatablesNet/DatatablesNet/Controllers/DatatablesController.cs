@@ -80,8 +80,14 @@ namespace DatatablesNet.Controllers
             return View(Contactos);
         }
 
-        // GET: Datatables
+        // GET: Datatables/Ejemplo2
         public ActionResult Ejemplo2()
+        {
+            return View(Contactos);
+        }
+
+        // GET: Datatables/Ejemplo3
+        public ActionResult Ejemplo3()
         {
             return View(Contactos);
         }

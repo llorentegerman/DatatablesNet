@@ -1,6 +1,6 @@
 ﻿@model IEnumerable<DatatablesNet.Models.Contacto>
 @{
-    ViewBag.Title = "Ejemplo2";
+    ViewBag.Title = "Ejemplo3";
 }
 
 @section headSection {
@@ -11,9 +11,12 @@
         $(document).ready(function () {
             $('#example').DataTable({
                 columns: [
-                    //Extraigo la definicion de las columnas desde el mismo modelo.
-                    //En este ejemplo la ubicación de las columnas se establece segun el orden de los atributos en el modelo.
-                    @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto)))
+                    //Extraigo la definición de las columnas desde el mismo modelo.
+                    //Posiciono las columnas según el orden en el que aparezcan en la lista pasada por parámetro.
+                    //Si no deseo mostrar alguna columna, simplemente la borro de esta lista.
+                    @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto), 
+                        new List<string>() { "Nombre", "Localidad", "Id", "Direccion", "Apellido", "Email", "Telefono" }) //Posiciones
+                    )
                 ],
                 //Serialize List
                 aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
@@ -23,15 +26,16 @@
     </script>
 }
 
-<h2>Ejemplo 2 - Creación de columnas desde el modelo</h2>
+<h2>Ejemplo 3 - Posición de las columnas</h2>
 
 
-<p>Creación de columnas desde el modelo y extracción de datos desde una Lista pasada como modelo.<br />
-    El metodo utilizado para crear o definir las columnas en función de los atributos del modelo, esta ubicado en la clase
-    Auxiliares\DataTablesAux.cs. Es llamado <b>ColumnsFromModel</b> y lo que hace es, recorrer cada atributo de la clase, extrayendo su
-    nombre, displayName y tipo. Con estos campos ya podemos definir una columna.<br />
-    Por defecto, las columnas apareceran en el orden en que aparecen los atributos en la clase.
-    En el proximo ejemplo se verá como definir, desde la vista, el orden en que deseamos mostrar las columnas.
+<p>
+    Definición de columnas y datos tomados desde una Lista pasada como modelo.<br />
+    <b>A diferencia del ejemplo anterior, en este ejemplo se utiliza un parámetro para indicar la posición en el que deseamos mostrar las columnas.</b>
+    Con este parámetro podemos decidir tambien cuales columnas incluir y cuales no.<br />
+    En próximos ejemplos vamos a ver como podemos incluir una columna sin hacerla visible. La diferencia con la técnica de este ejemplo, 
+    es que tendremos disponible el dato de esa columna para utilizarlo. Es común hacerlo con campos como por ejemplo el ID, el cual nos
+    puede ser útil, pero no queremos mostrarlo.
 </p>
 <a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
     View Source Code - Ver Codigo Fuente
@@ -63,12 +67,15 @@
 <code class="language-javascript">$(document).ready(function () {
     $('#example').DataTable({
         columns: [
-                //Extraigo la definicion de las columnas desde el mismo modelo.
-                //En este ejemplo la ubicación de las columnas se establece segun el orden de los atributos en el modelo.
-                @@Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto)))
-            ],
-        //Serialize List
-        aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+                    //Extraigo la definición de las columnas desde el mismo modelo.
+                    //Posiciono las columnas según el orden en el que aparezcan en la lista pasada por parámetro.    
+                    //Si no deseo mostrar alguna columna, simplemente la borro de esta lista.
+                    @@Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto), 
+                        new List<string>() { "Nombre", "Localidad", "Id", "Direccion", "Apellido", "Email", "Telefono" }) //Posiciones
+                    )
+                ],
+                //Serialize List
+                aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
     });
 });</code>
             </pre>
@@ -77,7 +84,7 @@
         <div role="tabpanel" class="tab-pane" id="css1">...</div>
         <div role="tabpanel" class="tab-pane" id="csharp1">
             <pre>
-<code class="language-csharp">public ActionResult Ejemplo2()
+<code class="language-csharp">public ActionResult Ejemplo3()
 {   
     return View(Contactos);
 }</code>
@@ -112,7 +119,7 @@
             sTipo = &quot;custom-date&quot;; //Este es un tipo customizado, creado para que las fechas se adapten al formato dd/MM/yyyy
         }
         int position = i;   //Si no definí ColumnsOrder, entonces las columnas se mostraran en el orden en el que estan 
-                            //definidos los atributos.        
+                            //definidos los atributos.
         if (ColumnsOrder != null)
         {
             position = ColumnsOrder.FindIndex(c =&gt; c.ToLower().Trim().Equals(attributeName.ToLower().Trim()));

@@ -13,13 +13,8 @@ namespace DatatablesNet.Auxiliares
         {
             PropertyInfo[] props = modelType.GetProperties(); //Obtengo todos los atributos de la clase
 
-            int cantidadDeColumnas = props.Count();
-
-            if (ColumnsOrder == null)
-                ColumnsOrder = new List<string>();
-            else
-                cantidadDeColumnas = ColumnsOrder.Count;
-
+            int cantidadDeColumnas = ColumnsOrder == null ? props.Count() : ColumnsOrder.Count;
+            
             string[] listHeaderDefinition = new string[cantidadDeColumnas];
 
             for(int i= 0; i < props.Count(); i++)
@@ -27,10 +22,11 @@ namespace DatatablesNet.Auxiliares
                 PropertyInfo prop = props[i];
                 string attributeName = prop.Name;
 
-                //Asumo que todos los atributos estan decorados por "Display", el cual
-                //utilizamos para definir cual sera el texto de esa columna.
-                DisplayAttribute displayAttribute = prop.GetCustomAttributes(typeof(DisplayAttribute), false).First() as DisplayAttribute;
-                string displayName = displayAttribute.Name; //Lo extraigo.
+                //Extraigo el DisplayAttribute, el cual utilizamos para definir cual sera el titulo a mostrar de esa columna.
+                //En caso de que no tenga, utilizo como displayName el nombre del atributo.
+                DisplayAttribute displayAttribute = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+
+                string displayName = displayAttribute != null ? displayAttribute.Name : attributeName.ToLower(); //Lo extraigo.
 
                 //Segun el tipo del atributo, lo mapeo a su correspondiente tipo en Datatables
                 string sType = prop.PropertyType.ToString().ToLower();
@@ -45,12 +41,14 @@ namespace DatatablesNet.Auxiliares
                     sTipo = "custom-date"; //Este es un tipo customizado, creado para que las fechas se adapten al formato dd/MM/yyyy
                 }
 
-                int position = ColumnsOrder.FindIndex(c => c.ToLower().Trim().Equals(attributeName.ToLower().Trim()));
-                if (position < 0)
+                int position = i;   //Si no definí ColumnsOrder, entonces las columnas se mostraran en el orden en el que estan 
+                                    //definidos los atributos.
+                if (ColumnsOrder != null)
                 {
-                    position = i;
+                    position = ColumnsOrder.FindIndex(c => c.ToLower().Trim().Equals(attributeName.ToLower().Trim()));
                 }
-                listHeaderDefinition[position] = "\t\t{ \"aTargets\": ["+ position + "], \"name\": \"" + attributeName + "\", \"title\": \"" + displayName + "\", \"type\": \"" + sTipo + "\", \"data\": \"" + attributeName + "\" }";
+                if(position >= 0) //position sera < 0, solo si no inclui a esta columna dentro de "ColumnsOrder"
+                    listHeaderDefinition[position] = "\t\t{ \"aTargets\": ["+ position + "], \"name\": \"" + attributeName + "\", \"title\": \"" + displayName + "\", \"type\": \"" + sTipo + "\", \"data\": \"" + attributeName + "\" }";
             }
 
             string headerDefinition = String.Join(",\n", listHeaderDefinition);            
