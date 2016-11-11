@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - My ASP.NET Application</title>
+    <title>@ViewBag.Title - Germán Llorente</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
 
@@ -22,13 +22,25 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+                @Html.ActionLink("Germán Llorente", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Ejemplo1", "Index", "Datatables")</li>
-                    <li>@Html.ActionLink("Ejemplo2", "Ejemplo2", "Datatables")</li>
-                    <li>@Html.ActionLink("Ejemplo3", "Ejemplo3", "Datatables")</li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" 
+                           aria-expanded="false">JQuery DataTables <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li>@Html.ActionLink("Ejemplo1", "Index", "Datatables")</li>
+                            <li>@Html.ActionLink("Ejemplo2", "Ejemplo2", "Datatables")</li>
+                            <li>@Html.ActionLink("Ejemplo3", "Ejemplo3", "Datatables")</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="https://github.com/llorentegerman/DatatablesNet" target="_blank"
+                           style="padding-top: 7px !important; padding-bottom: 0px !important;">
+                            <img src="~/Content/Images/GitHub/GitHub-Mark-Light-32px.png" />
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -37,7 +49,7 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+            <p>&copy; @DateTime.Now.Year - Germán Llorente</p>
         </footer>
     </div>
 
