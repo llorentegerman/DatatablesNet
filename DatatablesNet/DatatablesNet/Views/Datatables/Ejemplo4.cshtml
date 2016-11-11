@@ -1,0 +1,382 @@
+﻿@model IEnumerable<DatatablesNet.Models.Contacto>
+@{
+    ViewBag.Title = "Ejemplo4";
+}
+
+@section headSection {
+    <link href="https://cdn.datatables.net/buttons/1.2.2/css/buttons.dataTables.min.css" rel="stylesheet" />
+
+    <style>
+        .hideButton {
+            display: none !important;
+        }
+    </style>
+}
+
+@section scripts{
+
+    <script src="https://cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
+    <script src="//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js"></script>
+    <script src="//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js"></script>
+    <script src="//cdn.datatables.net/buttons/1.2.2/js/buttons.html5.min.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#example').DataTable({
+                columns: [
+                    @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
+                        new List<string>() { "Id", "Nombre", "Apellido", "Localidad", "Telefono", "Direccion", "Email" }) //Posiciones
+                    )
+                ]
+                //Serialize List
+                ,aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+                "dom": 'Brt<"bottom"ip><"clear">',
+                buttons: [
+                    {
+                        text: 'XLS',
+                        extend: 'excelHtml5',
+                        className: 'xlsExportButton hideButton',
+                        exportOptions: {
+                            columns: [0,1,2,3,4,5,6] //Aca puedo definir cuales columnas incluir y cuales no.
+                        },
+                        title: 'Contactos',
+                        extension: '.xls'
+                    },
+                    {
+                        extend: 'copyHtml5',
+                        className: 'copyExportButton hideButton',
+                        exportOptions: {
+                            columns: [0,1,2,3,4,5,6]
+                        },
+                        title: 'Contactos',
+                    },
+                    {
+                        extend: 'pdfHtml5',
+                        className: 'pdfExportButton hideButton',
+                        exportOptions: {
+                            columns: [0,1,2,3,4,5,6]
+                        },
+                        title: 'Contactos',
+                    }
+                ]
+            });
+        });
+
+        function GenerarExcel()
+        {
+            $('.xlsExportButton').click();
+        }
+
+        function GenerarPDF()
+        {
+            $('.pdfExportButton').click();
+        }
+
+        function CopiarTabla()
+        {
+            $('.copyExportButton').click();
+        }
+    </script>
+
+
+    <!-- Campo de búsqueda -->
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            $('#example_filter input').unbind();
+            $('#example_filter input').bind('keyup', function (e) {
+                if ($('#example').DataTable().search() !== this.value) {
+                    $('#example').DataTable().search(this.value).draw();
+                }
+            });
+
+            $('#buttonSearch').bind('click', function (e) {
+                var value = $('#example_filter input').val();
+                if ($('#example').DataTable().search() !== value) {
+                    $('#example').DataTable().search(value).draw();
+                }
+            });
+        });
+
+    </script>
+
+}
+
+<h2>Ejemplo 4 - Botones</h2>
+
+
+<p>
+    En la web de <a href="https://datatables.net/extensions/buttons/examples/html5/simple.html">DataTables</a>
+    hay ejemplos sobre como utilizar sus botones.<br />
+    Estos ofrecen funcionalidades como Copiar, Exportar a Excel, PDF y CSV. <br />
+    Una de las limitaciones que tienen, es que la "botonera" viene integrada a la estructura de la tabla, asi como también
+    el campo de busqueda. En este ejemplo vamos a ver como podemos hacer uso de esa funcionalidad, desde nuestros propios botones.<br />
+    La idea es, crear la botonera de DataTables "botonera", ocultarla y crear nuestra propia "botonera" mediante la cual invocaremos
+    a los eventos de la "botonera" oculta.
+</p>
+<a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+    View Source Code - Ver Codigo Fuente
+</a>
+<div class="collapse" id="collapseExample">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#html1" aria-controls="html1" role="tab" data-toggle="tab">HTML</a></li>
+        <li role="presentation"><a href="#javascript1" aria-controls="javascript1" role="tab" data-toggle="tab">Javascript</a></li>
+        <li role="presentation"><a href="#css1" aria-controls="css1" role="tab" data-toggle="tab">CSS</a></li>
+        <li role="presentation"><a href="#csharp1" aria-controls="csharp1" role="tab" data-toggle="tab">C# (Backend)</a></li>
+        <li role="presentation"><a href="#csharp1_2" aria-controls="csharp1_2" role="tab" data-toggle="tab">C# (ColumnsFromModel)</a></li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="html1">
+            <pre>
+<code class="language-html">&lt;div class=&quot;row&quot;&gt;
+    &lt;div class=&quot;col-sm-6&quot;&gt;
+        &lt;div class=&quot;btn-group&quot; role=&quot;group&quot; aria-label=&quot;...&quot;&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-success&quot; onclick=&quot;GenerarExcel();&quot;&gt;Excel&lt;/button&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-success&quot; onclick=&quot;GenerarPDF();&quot;&gt;PDF&lt;/button&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-success&quot; onclick=&quot;CopiarTabla();&quot;&gt;Copiar&lt;/button&gt;
+            &lt;button type=&quot;button&quot; class=&quot;btn btn-success&quot; onclick=&quot;$('#dialogFiltros').modal('show');&quot;&gt;Modal&lt;/button&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;col-sm-6&quot;&gt;
+        &lt;div id=&quot;example_filter&quot; class=&quot;dataTables_filter2 input-group inner-addon left-addon&quot; style=&quot;float:right !important; margin-bottom: 0px !important;&quot;&gt;
+            &lt;div class=&quot;input-group&quot; style=&quot;margin-bottom : 0px !important;&quot;&gt;
+                &lt;input type=&quot;search&quot; class=&quot;form-control input-sm&quot; placeholder=&quot;Buscar...&quot; aria-controls=&quot;example&quot;&gt;
+                &lt;span class=&quot;input-group-btn&quot;&gt;
+                    &lt;button class=&quot;btn btn-default input-sm&quot; type=&quot;button&quot; id=&quot;buttonSearch&quot;&gt;
+                        &lt;span class=&quot;glyphicon glyphicon-search&quot;&gt;&lt;/span&gt;
+                    &lt;/button&gt;
+                &lt;/span&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;table id=&quot;example&quot; class=&quot;display&quot; cellspacing=&quot;0&quot; width=&quot;100%&quot;&gt;
+    &lt;thead&gt;&lt;/thead&gt;
+    &lt;tbody&gt;&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class=&quot;modal fade&quot; tabindex=&quot;-1&quot; role=&quot;dialog&quot; id=&quot;dialogFiltros&quot;&gt;
+    &lt;div class=&quot;modal-dialog&quot;&gt;
+        &lt;div class=&quot;modal-content&quot;&gt;
+            &lt;div class=&quot;modal-header&quot;&gt;
+                &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot; aria-label=&quot;Close&quot;&gt;
+                    &lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;
+                &lt;/button&gt;
+                &lt;h4 class=&quot;modal-title&quot; style=&quot;color: #21527d; text-align:center !important;&quot;&gt;Filtros&lt;/h4&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;modal-body&quot;&gt;
+                &lt;h3&gt;Modal de ejemplo, util para incluir filtros.&lt;/h3&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;modal-footer&quot;&gt;
+                &lt;button type=&quot;button&quot; class=&quot;btn btn-primary&quot; data-dismiss=&quot;modal&quot;&gt;Cerrar&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;!-- /.modal-content --&gt;
+    &lt;/div&gt;
+    &lt;!-- /.modal-dialog --&gt;
+&lt;/div&gt;
+&lt;!-- /.modal --&gt;
+</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="javascript1">
+            <pre>
+<code class="language-javascript">&lt;script src=&quot;https://cdn.datatables.net/buttons/1.2.2/js/dataTables.buttons.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;//cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/pdfmake.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;//cdn.rawgit.com/bpampuch/pdfmake/0.1.18/build/vfs_fonts.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;//cdn.datatables.net/buttons/1.2.2/js/buttons.html5.min.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    $(document).ready(function () {
+        $('#example').DataTable({
+            columns: [
+                @@Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
+                    new List&lt;string&gt;() { &quot;Id&quot;, &quot;Nombre&quot;, &quot;Apellido&quot;, &quot;Localidad&quot;, &quot;Telefono&quot;, &quot;Direccion&quot;, &quot;Email&quot; }) //Posiciones
+                )
+            ]
+            //Serialize List
+            ,aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = &quot;yyyy/MM/dd&quot; })),
+            &quot;dom&quot;: 'Brt&lt;&quot;bottom&quot;ip&gt;&lt;&quot;clear&quot;&gt;',
+            buttons: [
+                {
+                    text: 'XLS',
+                    extend: 'excelHtml5',
+                    className: 'xlsExportButton hideButton',
+                    exportOptions: {
+                        columns: [0,1,2,3,4,5,6] //Aca puedo definir cuales columnas incluir y cuales no.
+                    },
+                    title: 'Contactos',
+                    extension: '.xls'
+                },
+                {
+                    extend: 'copyHtml5',
+                    className: 'copyExportButton hideButton',
+                    exportOptions: {
+                        columns: [0,1,2,3,4,5,6]
+                    },
+                    title: 'Contactos',
+                },
+                {
+                    extend: 'pdfHtml5',
+                    className: 'pdfExportButton hideButton',
+                    exportOptions: {
+                        columns: [0,1,2,3,4,5,6]
+                    },
+                    title: 'Contactos',
+                }
+            ]
+        });
+    });
+    function GenerarExcel()
+    {
+        $('.xlsExportButton').click();
+    }
+    function GenerarPDF()
+    {
+        $('.pdfExportButton').click();
+    }
+    function CopiarTabla()
+    {
+        $('.copyExportButton').click();
+    }
+&lt;/script&gt;
+&lt;!-- Campo de b&#250;squeda --&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+    $(document).ready(function () {
+        $('#example_filter input').unbind();
+        $('#example_filter input').bind('keyup', function (e) {
+            if ($('#example').DataTable().search() !== this.value) {
+                $('#example').DataTable().search(this.value).draw();
+            }
+        });
+        $('#buttonSearch').bind('click', function (e) {
+            var value = $('#example_filter input').val();
+            if ($('#example').DataTable().search() !== value) {
+                $('#example').DataTable().search(value).draw();
+            }
+        });
+    });
+&lt;/script&gt;
+</code>
+            </pre>
+        </div>
+
+        <div role="tabpanel" class="tab-pane" id="css1">
+            <pre>
+<code class="language-css">&lt;link href=&quot;https://cdn.datatables.net/buttons/1.2.2/css/buttons.dataTables.min.css&quot; rel=&quot;stylesheet&quot; /&gt;
+&lt;style&gt;
+    .hideButton {
+        display: none !important;
+    }
+&lt;/style&gt;</code>
+            </pre>
+
+        </div>
+        <div role="tabpanel" class="tab-pane" id="csharp1">
+            <pre>
+<code class="language-csharp">public ActionResult Ejemplo4()
+{
+    return View(Contactos);
+}</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="csharp1_2">
+            <pre>
+<code class="language-csharp">public static string ColumnsFromModel(Type modelType, List&lt;string&gt; ColumnsOrder = null)
+{
+    PropertyInfo[] props = modelType.GetProperties(); //Obtengo todos los atributos de la clase
+    int cantidadDeColumnas = ColumnsOrder == null ? props.Count() : ColumnsOrder.Count;
+    string[] listHeaderDefinition = new string[cantidadDeColumnas];
+    for(int i= 0; i &lt; props.Count(); i++)
+    {
+        PropertyInfo prop = props[i];
+        string attributeName = prop.Name;
+        //Extraigo el DisplayAttribute, el cual utilizamos para definir cual sera el titulo a mostrar de esa columna.
+        //En caso de que no tenga, utilizo como displayName el nombre del atributo.
+        DisplayAttribute displayAttribute = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+        string displayName = displayAttribute != null ? displayAttribute.Name : attributeName.ToLower(); //Lo extraigo.
+        //Segun el tipo del atributo, lo mapeo a su correspondiente tipo en Datatables
+        string sType = prop.PropertyType.ToString().ToLower();
+        string sTipo = &quot;string&quot;; //Type por defecto.
+        if (sType.IndexOf(&quot;int&quot;) &gt;= 0 || sType.IndexOf(&quot;double&quot;) &gt;= 0 || sType.IndexOf(&quot;float&quot;) &gt;= 0 ||
+            sType.IndexOf(&quot;real&quot;) &gt;= 0 || sType.IndexOf(&quot;single&quot;) &gt;= 0)
+        {
+            sTipo = &quot;num&quot;;
+        }
+        else if (sType.IndexOf(&quot;date&quot;) &gt;= 0)
+        {
+            sTipo = &quot;custom-date&quot;; //Este es un tipo customizado, creado para que las fechas se adapten al formato dd/MM/yyyy
+        }
+        int position = i;   //Si no definí ColumnsOrder, entonces las columnas se mostraran en el orden en el que estan
+                            //definidos los atributos.
+        if (ColumnsOrder != null)
+        {
+            position = ColumnsOrder.FindIndex(c =&gt; c.ToLower().Trim().Equals(attributeName.ToLower().Trim()));
+        }
+        if(position &gt;= 0) //position sera &lt; 0, solo si no inclui a esta columna dentro de &quot;ColumnsOrder&quot;
+            listHeaderDefinition[position] = &quot;\t\t{ \&quot;aTargets\&quot;: [&quot;+ position + &quot;], \&quot;name\&quot;: \&quot;&quot; + attributeName + &quot;\&quot;, \&quot;title\&quot;: \&quot;&quot; + displayName + &quot;\&quot;, \&quot;type\&quot;: \&quot;&quot; + sTipo + &quot;\&quot;, \&quot;data\&quot;: \&quot;&quot; + attributeName + &quot;\&quot; }&quot;;
+    }
+    string headerDefinition = String.Join(&quot;,\n&quot;, listHeaderDefinition);
+    return headerDefinition;
+}</code>
+            </pre>
+        </div>
+    </div>
+
+</div>
+
+<br /><br />
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="btn-group" role="group" aria-label="...">
+            <button type="button" class="btn btn-success" onclick="GenerarExcel();">Excel</button>
+            <button type="button" class="btn btn-success" onclick="GenerarPDF();">PDF</button>
+            <button type="button" class="btn btn-success" onclick="CopiarTabla();">Copiar</button>
+            <button type="button" class="btn btn-success" onclick="$('#dialogFiltros').modal('show');">Modal</button>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div id="example_filter" class="dataTables_filter2 input-group inner-addon left-addon" style="float:right !important; margin-bottom: 0px !important;">
+            <div class="input-group" style="margin-bottom : 0px !important;">
+                <input type="search" class="form-control input-sm" placeholder="Buscar..." aria-controls="example">
+                <span class="input-group-btn">
+                    <button class="btn btn-default input-sm" type="button" id="buttonSearch">
+                        <span class="glyphicon glyphicon-search"></span>
+                    </button>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+<table id="example" class="display" cellspacing="0" width="100%">
+    <thead></thead>
+    <tbody></tbody>
+</table>
+
+
+<div class="modal fade" tabindex="-1" role="dialog" id="dialogFiltros">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" style="color: #21527d; text-align:center !important;">Filtros</h4>
+            </div>
+            <div class="modal-body">
+                <h3>Modal de ejemplo, util para incluir filtros.</h3>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->

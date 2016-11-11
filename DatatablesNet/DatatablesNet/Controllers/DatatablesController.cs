@@ -91,5 +91,11 @@ namespace DatatablesNet.Controllers
         {
             return View(Contactos);
         }
+
+        // GET: Datatables/Ejemplo4
+        public ActionResult Ejemplo4()
+        {
+            return View(Contactos);
+        }
     }
 }
