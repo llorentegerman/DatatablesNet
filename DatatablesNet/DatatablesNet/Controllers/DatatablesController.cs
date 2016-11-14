@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -114,19 +115,53 @@ namespace DatatablesNet.Controllers
             return View(model);
         }
 
+        // GET: Datatables/Ejemplo7
+        public ActionResult Ejemplo7()
+        {
+            List<Contacto> model = Contactos.Skip(0).Take(10).ToList();
+            ViewBag.TotalFilas = Contactos.Count;
+            return View(model);
+        }
+
         [HttpPost]
         public JsonResult SearchDataTable()
         {
             DataTablesRequest req = DataTablesRequest.ExtractFormRequest(Request.Form);
+
+            string valorBusqueda = req.searchValue.ToLower();
+
+            int salteo = req.start;
+            int muestro = req.length;
+
+            //Busco coincidencias por todos los campos del Modelo.
+            var consultaBasica = Contactos.Where(c =>
+                    c.Apellido.ToLower().IndexOf(valorBusqueda) >= 0 ||
+                    c.Direccion.ToLower().IndexOf(valorBusqueda) >= 0 ||
+                    c.Email.ToLower().IndexOf(valorBusqueda) >= 0 ||
+                    c.Id.ToString().IndexOf(valorBusqueda) >= 0 ||
+                    c.Localidad.ToLower().IndexOf(valorBusqueda) >= 0 ||
+                    c.Nombre.ToLower().IndexOf(valorBusqueda) >= 0 ||
+                    c.Telefono.ToLower().IndexOf(valorBusqueda) >= 0
+            );
+
+            var consulta = consultaBasica.Skip(salteo).Take(muestro);
+
+            PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(typeof(Contacto)); //Extraigo los campos del modelo, para aplicar métodos de ordenamiento
             
-            List<string> listOrderBy = new List<string>();
             foreach (int orderColumnIndex in req.orderColumn)
             {
-                string columnToOrder = req.columnsName[orderColumnIndex];
-                string orderDirection = req.orderDir[req.orderColumn.IndexOf(orderColumnIndex)];
+                //Puedo ordenar por mas de un campo, por lo tanto, por cada uno, extraigo el nombre,
+                //me fijo si es ascendente o descendente, y concateno el ordenamiento a la consulta.
+                string columnToOrder = req.columnsName[orderColumnIndex].ToLower();
+                string orderDirection = req.orderDir[req.orderColumn.IndexOf(orderColumnIndex)].ToLower();
+                PropertyDescriptor prop = properties.Find(columnToOrder, true);
+                if (orderDirection.Equals("asc"))
+                    consulta = consulta.OrderBy(x => prop.GetValue(x));
+                else
+                    consulta = consulta.OrderByDescending(x => prop.GetValue(x));
             }
-            string orderBy = String.Join(",", listOrderBy);
 
+            //Extraigo las columnas searchables, esto lo voy a utilizar en el método generico.
             List<int> searchableIndex = new List<int>();
             for (int i = 0; i < req.columnsSearchable.Count; i++)
             {
@@ -135,20 +170,17 @@ namespace DatatablesNet.Controllers
                     searchableIndex.Add(i);
                 }
             }
-
-            string valorBusqueda = req.searchValue;
-
-            int salteo = req.start;
-            int muestro = req.length;
             
-            List<Contacto> model = Contactos.Skip(salteo).Take(muestro).ToList();
+            List<Contacto> model = consulta.ToList(); //Realizo la consulta
+
+            int cantidadFiltrados = consultaBasica.Count();
 
             string json = JsonConvert.SerializeObject(model, Formatting.None, new IsoDateTimeConverter() { DateTimeFormat = "dd/MM/yyyy" });
 
             DataTablesResponse respuesta = new DataTablesResponse();
-            respuesta.data = model;//json;
+            respuesta.data = model;
             respuesta.draw = req.draw;
-            respuesta.recordsFiltered = Contactos.Count(); //Ver de aplicar bien el count de los datos filtrados.
+            respuesta.recordsFiltered = cantidadFiltrados;
             respuesta.recordsTotal = Contactos.Count();
 
             return Json(respuesta, JsonRequestBehavior.AllowGet);

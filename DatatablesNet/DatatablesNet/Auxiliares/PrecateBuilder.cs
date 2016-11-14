@@ -9,6 +9,7 @@ namespace DatatablesNet.Auxiliares
     /// <summary>  
     /// Enables the efficient, dynamic composition of query predicates.  
     /// </summary>  
+    /// http://www.c-sharpcorner.com/UploadFile/c42694/dynamic-query-in-linq-using-predicate-builder/
     public static class PredicateBuilder
     {
         /// <summary>  
