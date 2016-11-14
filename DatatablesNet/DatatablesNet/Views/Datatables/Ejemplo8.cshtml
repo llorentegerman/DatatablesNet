@@ -70,24 +70,18 @@
 <code class="language-javascript">$(document).ready(function () {
     $('#example').DataTable({
         columns: [
-            //Extraigo la definición de las columnas desde el mismo modelo.
-            //Posiciono las columnas según el orden en el que aparezcan en la lista pasada por parámetro.
-            //Si no deseo mostrar alguna columna, simplemente la borro de esta lista.
-            @@Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
-                new List<string>() { "Nombre", "Localidad", "Id", "Direccion", "Apellido", "Email", "Telefono" }) //Posiciones
-            )
+            @@Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto)))
         ],
-        //Por defecto cargo una página
-        aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+        //Por defecto cargo una p&#225;gina
+        aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = &quot;yyyy/MM/dd&quot; })),
         processing: true,
         serverSide: true,
         ajax: {
-            url: "@@Url.Action("SearchDataTable")",
+            url: &quot;@@Url.Action(&quot;SearchDataTable&quot;)&quot;,
             type: 'POST' //Por defecto utiliza GET
         },
-        deferLoading: @@ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
-        searchDelay: 500,   //Se realiza una búsqueda cada medio segundo, siempre y cuando se haya ingresado algun valor en el campo de búsqueda. 
-                            //https://datatables.net/forums/discussion/23970/1-10-3-searchdelay-not-working-properly
+        deferLoading: @@ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tama&#241;o real de nuestro set de datos.
+        searchDelay: 500, 
     });
 });</code>
             </pre>
