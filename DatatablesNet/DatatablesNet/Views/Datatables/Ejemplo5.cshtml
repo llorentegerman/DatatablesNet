@@ -1,0 +1,230 @@
+﻿@model IEnumerable<DatatablesNet.Models.Contacto>
+@{
+    ViewBag.Title = "Ejemplo5";
+}
+
+@section headSection {
+}
+
+@section scripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#example').DataTable({
+                columns: [
+                    //Extraigo la definición de las columnas desde el mismo modelo.
+                    //Posiciono las columnas según el orden en el que aparezcan en la lista pasada por parámetro.
+                    //Si no deseo mostrar alguna columna, simplemente la borro de esta lista.
+                    @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
+                        new List<string>() { "Nombre", "Localidad", "Id", "Direccion", "Apellido", "Email", "Telefono" }) //Posiciones
+                    )
+                ],
+                //Por defecto cargo una página
+                aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "@Url.Action("SearchDataTable")",
+                    type: 'POST' //Por defecto utiliza GET
+                },
+                deferLoading: @ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
+                searchDelay: 500,   //Se realiza una búsqueda cada medio segundo, siempre y cuando se haya ingresado algun valor en el campo de búsqueda. 
+                                    //https://datatables.net/forums/discussion/23970/1-10-3-searchdelay-not-working-properly
+            });
+
+        });
+    </script>
+}
+
+<h2>Ejemplo 5 - Server Side, Paginado</h2>
+
+
+<p>
+    En este ejemplo cargamos por defecto, solo la primer página, a las demas las vamos a buscar del lado del servidor cada vez que el usuario las 
+    requiera.<br />
+    Ideal para trabajar con grandes sets de datos, a los cuales se hace complicado traer hacia el cliente, debido a su gran tamaño.<br />
+    Contamos con un set de prueba de 57 elementos, vamos a traer en la carga inicial a los primeros 10.<br />
+    Cada vez que cambiemos de página, se realizará una llamada al servidor,
+    nuestra consulta será procesada alli y nos retornará la información correspondiente.<br />
+    <b>Notar que a diferencia de este, en los anteriores ejemplos, haciamos los cambios de página, con el set
+    de datos cargado completamente en el cliente.</b>
+    En próximos ejemplos iremos más alla, y veremos como realizar búsquedas y ordenamientos del lado del servidor.
+</p>
+<a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+    View Source Code - Ver Codigo Fuente
+</a>
+<div class="collapse" id="collapseExample">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#html1" aria-controls="html1" role="tab" data-toggle="tab">HTML</a></li>
+        <li role="presentation"><a href="#javascript1" aria-controls="javascript1" role="tab" data-toggle="tab">Javascript</a></li>
+        <li role="presentation"><a href="#css1" aria-controls="css1" role="tab" data-toggle="tab">CSS</a></li>
+        <li role="presentation"><a href="#csharp1" aria-controls="csharp1" role="tab" data-toggle="tab">C# (Backend)</a></li>
+        <li role="presentation"><a href="#csharp1_2" aria-controls="csharp1_2" role="tab" data-toggle="tab">C# (SearchDataTable)</a></li>
+        <li role="presentation"><a href="#csharp1_3" aria-controls="csharp1_3" role="tab" data-toggle="tab">C# (DataTables Request y Response)</a></li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="html1">
+            <pre>
+<code class="language-html">&lt;table id=&quot;example&quot; class=&quot;display&quot; cellspacing=&quot;0&quot; width=&quot;100%&quot;&gt;
+    &lt;thead&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;        
+    &lt;/tbody&gt;
+&lt;/table&gt;</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="javascript1">
+            <pre>
+<code class="language-javascript">$(document).ready(function () {
+    $('#example').DataTable({
+        columns: [
+            //Extraigo la definición de las columnas desde el mismo modelo.
+            //Posiciono las columnas según el orden en el que aparezcan en la lista pasada por parámetro.
+            //Si no deseo mostrar alguna columna, simplemente la borro de esta lista.
+            @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
+                new List<string>() { "Nombre", "Localidad", "Id", "Direccion", "Apellido", "Email", "Telefono" }) //Posiciones
+            )
+        ],
+        //Por defecto cargo una página
+        aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "@Url.Action("SearchDataTable")",
+            type: 'POST' //Por defecto utiliza GET
+        },
+        deferLoading: @ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
+        searchDelay: 500,   //Se realiza una búsqueda cada medio segundo, siempre y cuando se haya ingresado algun valor en el campo de búsqueda. 
+                            //https://datatables.net/forums/discussion/23970/1-10-3-searchdelay-not-working-properly
+    });
+});</code>
+            </pre>
+        </div>
+
+        <div role="tabpanel" class="tab-pane" id="css1">...</div>
+        <div role="tabpanel" class="tab-pane" id="csharp1">
+            <pre>
+<code class="language-csharp">public ActionResult Ejemplo5()
+{   
+    List&lt;Contacto&gt; model = Contactos.Skip(0).Take(10).ToList();
+    ViewBag.TotalFilas = Contactos.Count;
+    return View(model);
+}</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="csharp1_2">
+            <pre>
+<code class="language-csharp">[HttpPost]
+public JsonResult SearchDataTable()
+{
+    DataTablesRequest req = DataTablesRequest.ExtractFormRequest(Request.Form);
+    
+    List&lt;string&gt; listOrderBy = new List&lt;string&gt;();
+    foreach (int orderColumnIndex in req.orderColumn)
+    {
+        string columnToOrder = req.columnsName[orderColumnIndex];
+        string orderDirection = req.orderDir[req.orderColumn.IndexOf(orderColumnIndex)];
+    }
+    string orderBy = String.Join(&quot;,&quot;, listOrderBy);
+    List&lt;int&gt; searchableIndex = new List&lt;int&gt;();
+    for (int i = 0; i &lt; req.columnsSearchable.Count; i++)
+    {
+        if (req.columnsSearchable[i])
+        {
+            searchableIndex.Add(i);
+        }
+    }
+    string valorBusqueda = req.searchValue;
+    int salteo = req.start;
+    int muestro = req.length;
+    
+    List&lt;Contacto&gt; model = Contactos.Skip(salteo).Take(muestro).ToList();
+    string json = JsonConvert.SerializeObject(model, Formatting.None, new IsoDateTimeConverter() { DateTimeFormat = &quot;dd/MM/yyyy&quot; });
+    DataTablesResponse respuesta = new DataTablesResponse();
+    respuesta.data = model;//json;
+    respuesta.draw = req.draw;
+    respuesta.recordsFiltered = Contactos.Count(); //Ver de aplicar bien el count de los datos filtrados.
+    respuesta.recordsTotal = Contactos.Count();
+    return Json(respuesta, JsonRequestBehavior.AllowGet);
+}</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="csharp1_3">
+            <pre>
+<code class="language-csharp">public class DataTablesRequest
+{
+    public int draw;
+    public int start;
+    public int length;
+    public string searchValue;
+    public bool searchRegex;
+    public List&lt;int&gt; orderColumn = new List&lt;int&gt;();
+    public List&lt;string&gt; orderDir = new List&lt;string&gt;();
+    public List&lt;string&gt; columnsData = new List&lt;string&gt;();
+    public List&lt;string&gt; columnsName = new List&lt;string&gt;();
+    public List&lt;bool&gt; columnsSearchable = new List&lt;bool&gt;();
+    public List&lt;bool&gt; columnsOrderable = new List&lt;bool&gt;();
+    public List&lt;string&gt; columnsSearchValue = new List&lt;string&gt;();
+    public List&lt;bool&gt; columnsSearchRegex = new List&lt;bool&gt;();
+    public static DataTablesRequest ExtractFormRequest(System.Collections.Specialized.NameValueCollection queryString)
+    {
+        DataTablesRequest retorno = new DataTablesRequest();
+        retorno.draw = Int32.Parse(queryString[&quot;draw&quot;]);
+        retorno.start = Int32.Parse(queryString[&quot;start&quot;]);
+        retorno.length = Int32.Parse(queryString[&quot;length&quot;]);
+        retorno.searchValue = queryString[&quot;search[value]&quot;];
+        retorno.searchValue = retorno.searchValue.Replace(&quot;'&quot;, &quot;''&quot;);
+        retorno.searchRegex = bool.Parse(queryString[&quot;search[regex]&quot;]);
+        List&lt;string&gt; keysColumns = queryString.AllKeys.Where(k =&gt; k.ToLower().IndexOf(&quot;columns&quot;) == 0).ToList();
+        foreach (string key in keysColumns)
+        {
+            var sIndex = System.Text.RegularExpressions.Regex.Match(key, @@&quot;\[([^]]*)\]&quot;).Groups[1].Value;
+            int index = Int32.Parse(sIndex);
+            string sNombre = key.Substring(key.IndexOf(&quot;]&quot;) + 1).Replace(&quot;[&quot;, &quot;&quot;).Replace(&quot;]&quot;, &quot;&quot;).ToLower();
+            switch (sNombre)
+            {
+                case &quot;data&quot;: retorno.columnsData.Add(queryString[key]); break;
+                case &quot;name&quot;: retorno.columnsName.Add(queryString[key]); break;
+                case &quot;searchable&quot;: retorno.columnsSearchable.Add(bool.Parse(queryString[key])); break;
+                case &quot;orderable&quot;: retorno.columnsOrderable.Add(bool.Parse(queryString[key])); break;
+                case &quot;searchvalue&quot;: retorno.columnsSearchValue.Add(queryString[key]); break;
+                case &quot;searchregex&quot;: retorno.columnsSearchRegex.Add(bool.Parse(queryString[key])); break;
+            }
+        }
+        List&lt;string&gt; keysOrders = queryString.AllKeys.Where(k =&gt; k.ToLower().IndexOf(&quot;order&quot;) == 0).ToList();
+        foreach (string key in keysOrders)
+        {
+            var sIndex = System.Text.RegularExpressions.Regex.Match(key, @@&quot;\[([^]]*)\]&quot;).Groups[1].Value;
+            int index = Int32.Parse(sIndex);
+            string sNombre = key.Substring(key.IndexOf(&quot;]&quot;) + 1).Replace(&quot;[&quot;, &quot;&quot;).Replace(&quot;]&quot;, &quot;&quot;).ToLower();
+            switch (sNombre)
+            {
+                case &quot;column&quot;: retorno.orderColumn.Add(Int32.Parse(queryString[key])); break;
+                case &quot;dir&quot;: retorno.orderDir.Add(queryString[key]); break;
+            }
+        }
+        return retorno;
+    }
+}
+public class DataTablesResponse
+{
+    public int draw;
+    public int recordsTotal;
+    public int recordsFiltered;
+    public IEnumerable&lt;Object&gt; data;
+    public string error;
+}</code>
+            </pre>
+        </div>
+    </div>
+
+</div>
+
+<br /><br />
+
+<table id="example" class="display" cellspacing="0" width="100%">
+    <thead></thead>
+    <tbody></tbody>
+</table>

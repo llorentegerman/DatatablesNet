@@ -1,8 +1,10 @@
-﻿using DatatablesNet.Models;
+﻿using DatatablesNet.Auxiliares;
+using DatatablesNet.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace DatatablesNet.Controllers
@@ -97,5 +99,54 @@ namespace DatatablesNet.Controllers
         {
             return View(Contactos);
         }
+
+        // GET: Datatables/Ejemplo5
+        public ActionResult Ejemplo5()
+        {
+            List<Contacto> model = Contactos.Skip(0).Take(10).ToList();
+            ViewBag.TotalFilas = Contactos.Count;
+            return View(model);
+        }
+
+        [HttpPost]
+        public JsonResult SearchDataTable()
+        {
+            DataTablesRequest req = DataTablesRequest.ExtractFormRequest(Request.Form);
+            
+            List<string> listOrderBy = new List<string>();
+            foreach (int orderColumnIndex in req.orderColumn)
+            {
+                string columnToOrder = req.columnsName[orderColumnIndex];
+                string orderDirection = req.orderDir[req.orderColumn.IndexOf(orderColumnIndex)];
+            }
+            string orderBy = String.Join(",", listOrderBy);
+
+            List<int> searchableIndex = new List<int>();
+            for (int i = 0; i < req.columnsSearchable.Count; i++)
+            {
+                if (req.columnsSearchable[i])
+                {
+                    searchableIndex.Add(i);
+                }
+            }
+
+            string valorBusqueda = req.searchValue;
+
+            int salteo = req.start;
+            int muestro = req.length;
+            
+            List<Contacto> model = Contactos.Skip(salteo).Take(muestro).ToList();
+
+            string json = JsonConvert.SerializeObject(model, Formatting.None, new IsoDateTimeConverter() { DateTimeFormat = "dd/MM/yyyy" });
+
+            DataTablesResponse respuesta = new DataTablesResponse();
+            respuesta.data = model;//json;
+            respuesta.draw = req.draw;
+            respuesta.recordsFiltered = Contactos.Count(); //Ver de aplicar bien el count de los datos filtrados.
+            respuesta.recordsTotal = Contactos.Count();
+
+            return Json(respuesta, JsonRequestBehavior.AllowGet);
+        }
+
     }
 }

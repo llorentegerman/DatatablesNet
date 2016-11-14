@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Web;
 
 namespace DatatablesNet.Auxiliares
 {
@@ -55,6 +54,82 @@ namespace DatatablesNet.Auxiliares
 
             return headerDefinition;
         }
+    }
 
+    public class DataTablesRequest
+    {
+        public int draw;
+        public int start;
+        public int length;
+        public string searchValue;
+        public bool searchRegex;
+
+        public List<int> orderColumn = new List<int>();
+        public List<string> orderDir = new List<string>();
+
+        public List<string> columnsData = new List<string>();
+        public List<string> columnsName = new List<string>();
+
+        public List<bool> columnsSearchable = new List<bool>();
+        public List<bool> columnsOrderable = new List<bool>();
+
+        public List<string> columnsSearchValue = new List<string>();
+        public List<bool> columnsSearchRegex = new List<bool>();
+
+        public static DataTablesRequest ExtractFormRequest(System.Collections.Specialized.NameValueCollection queryString)
+        {
+            DataTablesRequest retorno = new DataTablesRequest();
+
+            retorno.draw = Int32.Parse(queryString["draw"]);
+            retorno.start = Int32.Parse(queryString["start"]);
+            retorno.length = Int32.Parse(queryString["length"]);
+            retorno.searchValue = queryString["search[value]"];
+            retorno.searchValue = retorno.searchValue.Replace("'", "''");
+            retorno.searchRegex = bool.Parse(queryString["search[regex]"]);
+
+            List<string> keysColumns = queryString.AllKeys.Where(k => k.ToLower().IndexOf("columns") == 0).ToList();
+            foreach (string key in keysColumns)
+            {
+                var sIndex = System.Text.RegularExpressions.Regex.Match(key, @"\[([^]]*)\]").Groups[1].Value;
+                int index = Int32.Parse(sIndex);
+                string sNombre = key.Substring(key.IndexOf("]") + 1).Replace("[", "").Replace("]", "").ToLower();
+                switch (sNombre)
+                {
+                    case "data": retorno.columnsData.Add(queryString[key]); break;
+                    case "name": retorno.columnsName.Add(queryString[key]); break;
+                    case "searchable": retorno.columnsSearchable.Add(bool.Parse(queryString[key])); break;
+                    case "orderable": retorno.columnsOrderable.Add(bool.Parse(queryString[key])); break;
+                    case "searchvalue": retorno.columnsSearchValue.Add(queryString[key]); break;
+                    case "searchregex": retorno.columnsSearchRegex.Add(bool.Parse(queryString[key])); break;
+                }
+
+            }
+
+            List<string> keysOrders = queryString.AllKeys.Where(k => k.ToLower().IndexOf("order") == 0).ToList();
+            foreach (string key in keysOrders)
+            {
+                var sIndex = System.Text.RegularExpressions.Regex.Match(key, @"\[([^]]*)\]").Groups[1].Value;
+                int index = Int32.Parse(sIndex);
+                string sNombre = key.Substring(key.IndexOf("]") + 1).Replace("[", "").Replace("]", "").ToLower();
+                switch (sNombre)
+                {
+                    case "column": retorno.orderColumn.Add(Int32.Parse(queryString[key])); break;
+                    case "dir": retorno.orderDir.Add(queryString[key]); break;
+                }
+
+            }
+
+            return retorno;
+        }
+
+    }
+
+    public class DataTablesResponse
+    {
+        public int draw;
+        public int recordsTotal;
+        public int recordsFiltered;
+        public IEnumerable<Object> data;
+        public string error;
     }
 }

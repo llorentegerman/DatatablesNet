@@ -121,6 +121,7 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Auxiliares\DataTablesAux.cs" />
+    <Compile Include="Auxiliares\PrecateBuilder.cs" />
     <Compile Include="Controllers\DatatablesController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Global.asax.cs">
@@ -176,6 +177,7 @@
     <Content Include="Views\Datatables\Ejemplo2.cshtml" />
     <Content Include="Views\Datatables\Ejemplo3.cshtml" />
     <Content Include="Views\Datatables\Ejemplo4.cshtml" />
+    <Content Include="Views\Datatables\Ejemplo5.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
