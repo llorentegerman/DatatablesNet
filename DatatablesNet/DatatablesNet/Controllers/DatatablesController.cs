@@ -108,6 +108,14 @@ namespace DatatablesNet.Controllers
             return View(model);
         }
 
+        // GET: Datatables/Ejemplo6
+        public ActionResult Ejemplo6()
+        {
+            List<Contacto> model = Contactos.Skip(0).Take(10).ToList();
+            ViewBag.TotalFilas = Contactos.Count;
+            return View(model);
+        }
+
         [HttpPost]
         public JsonResult SearchDataTable()
         {

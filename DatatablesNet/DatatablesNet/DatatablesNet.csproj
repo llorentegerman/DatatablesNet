@@ -178,6 +178,7 @@
     <Content Include="Views\Datatables\Ejemplo3.cshtml" />
     <Content Include="Views\Datatables\Ejemplo4.cshtml" />
     <Content Include="Views\Datatables\Ejemplo5.cshtml" />
+    <Content Include="Views\Datatables\Ejemplo6.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
