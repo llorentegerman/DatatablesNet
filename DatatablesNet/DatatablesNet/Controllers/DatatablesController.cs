@@ -103,9 +103,7 @@ namespace DatatablesNet.Controllers
         // GET: Datatables/Ejemplo5
         public ActionResult Ejemplo5()
         {
-            List<Contacto> model = Contactos.Skip(0).Take(10).ToList();
-            ViewBag.TotalFilas = Contactos.Count;
-            return View(model);
+            return View(Contactos);
         }
 
         // GET: Datatables/Ejemplo6

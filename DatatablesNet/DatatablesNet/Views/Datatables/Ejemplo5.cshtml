@@ -10,46 +10,49 @@
     <script type="text/javascript">
         $(document).ready(function () {
             $('#example').DataTable({
-                columns: [
-                    //Extraigo la definición de las columnas desde el mismo modelo.
-                    //Posiciono las columnas según el orden en el que aparezcan en la lista pasada por parámetro.
-                    //Si no deseo mostrar alguna columna, simplemente la borro de esta lista.
+                aoColumnDefs: [
+                    //ATENCION: Ver que ubicamos la columna ID en segundo lugar, ya que será la que vamos a ocultar.
+                    //Siempre es bueno dejar la primer columna (Nombre en este caso) visible, ya que si nuestra tabla tiene childRows (Email en este caso),
+                    //no veremos el boton verde para desplegarlas.
                     @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
-                        new List<string>() { "Nombre", "Localidad", "Id", "Direccion", "Apellido", "Email", "Telefono" }) //Posiciones
-                    )
+                        new List<string>() { "Nombre", "Id", "Apellido", "Telefono", "Direccion", "Localidad", "Email"  } //Posiciones
+                    )),
+                    {
+                        "class": "all", //Con esta clase, esta columna estara siempre visible aunque achiquemos la pantalla.
+                        "render": function (data, type, row) {
+                            var retorno = '<a title="Eliminar" onclick="alert(\'Eliminar el contacto con ID = ' + row['Id'] + '\') " >';
+                            retorno += '	<span class="glyphicon glyphicon-remove" />';
+                            retorno += '</a>';
+                            return retorno;
+                        },
+                        "aTargets": [7] //Ubico esta nueva fila al final, eran en total 7, que iban del 0 al 6. Ahora con esta, tenemos 8 columnas.
+                    },
+                    { "class": "never", "aTargets": [1] }, //Con la calse 'never' indicamos que esa columna no estara nunca visible.
+                    { "class": "none", "aTargets": [6] }, //Con la clase 'none' indicamos que esa columna solo estara disponible como childRow.
                 ],
-                //Por defecto cargo una página
+                responsive : true,
                 aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: "@Url.Action("SearchDataTable")",
-                    type: 'POST' //Por defecto utiliza GET
-                },
-                deferLoading: @ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
-                searchDelay: 500,   //Se realiza una búsqueda cada medio segundo, siempre y cuando se haya ingresado algun valor en el campo de búsqueda. 
-                                    //https://datatables.net/forums/discussion/23970/1-10-3-searchdelay-not-working-properly
             });
 
         });
     </script>
 }
 
-<h2>Ejemplo 5 - Server Side, Paginado</h2>
+<h2>Ejemplo 5 - Responsive y Columnas Ocultas</h2>
 
 
 <p>
-    En este ejemplo cargamos por defecto, solo la primer página, a las demas las vamos a buscar del lado del servidor cada vez que el usuario las 
-    requiera.<br />
-    Ideal para trabajar con grandes sets de datos, a los cuales se hace complicado traer hacia el cliente, debido a su gran tamaño.<br />
-    Contamos con un set de prueba de 57 elementos, vamos a traer en la carga inicial a los primeros 10.<br />
-    Cada vez que cambiemos de página, se realizará una llamada al servidor,
-    nuestra consulta será procesada alli y nos retornará la información correspondiente.<br />
-    <b>Notar que a diferencia de este, en los anteriores ejemplos, haciamos los cambios de página, con el set
-    de datos cargado completamente en el cliente.</b>
-    En este ejemplo incluimos dos nuevas clases, DataTablesRequest y DataTablesResponse, que son las encargadas de representar al
-    Request y Response del lado del servidor. Estas son utilizadas por el método SearchDataTable, el cual es invocado ante cada cambio de página.
-    En próximos ejemplos iremos más alla, y veremos como realizar búsquedas y ordenamientos del lado del servidor.
+    Veremos como ocultar columnas pero dejándolas disponibles para potenciales usos.<br />
+    En este ejemplo en particular, veremos como ocultar la columna ID, y crearemos una nueva columna con un botón que nos mostrará un alerta
+    con el ID de la fila seleccionada. También ocultaremos pero de forma 'parcial' la columna Email, la cual podremos ver haciendo
+    click sobre el boton verde que aparece en cada fila.<br />
+    Para esto utilizaremos la propiedad <a href="https://datatables.net/extensions/responsive/" target="_blank">responsive</a> 
+    que tiene esta libreria (notar que incluimos un nuevo archivo .js y un .css) y 
+    diferentes clases para controlar la visibilidad de las columnas, que podemos ver en este <a href="https://datatables.net/extensions/responsive/examples/display-control/classes.html" target="_blank">link</a>.
+    <br />
+    A medida que se achica la pantalla van desapareciendo columnas que podremos seguir viendo al presionar el boton verde.<br />
+    Notar que la columna con el botón que creamos no desaparece aunque achiquemos al máximo la pantalla, porque tiene asignada una de las clases
+    que la mantiene siempre visible.
 </p>
 <a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
     View Source Code - Ver Codigo Fuente
@@ -61,8 +64,7 @@
         <li role="presentation"><a href="#javascript1" aria-controls="javascript1" role="tab" data-toggle="tab">Javascript</a></li>
         <li role="presentation"><a href="#css1" aria-controls="css1" role="tab" data-toggle="tab">CSS</a></li>
         <li role="presentation"><a href="#csharp1" aria-controls="csharp1" role="tab" data-toggle="tab">C# (Backend)</a></li>
-        <li role="presentation"><a href="#csharp1_2" aria-controls="csharp1_2" role="tab" data-toggle="tab">C# (SearchDataTable)</a></li>
-        <li role="presentation"><a href="#csharp1_3" aria-controls="csharp1_3" role="tab" data-toggle="tab">C# (DataTables Request y Response)</a></li>
+        <li role="presentation"><a href="#csharp1_2" aria-controls="csharp1_2" role="tab" data-toggle="tab">C# (ColumnsFromModel)</a></li>
     </ul>
 
     <!-- Tab panes -->
@@ -79,144 +81,92 @@
         </div>
         <div role="tabpanel" class="tab-pane" id="javascript1">
             <pre>
-<code class="language-javascript">$(document).ready(function () {
-    $('#example').DataTable({
-        columns: [
-            //Extraigo la definición de las columnas desde el mismo modelo.
-            //Posiciono las columnas según el orden en el que aparezcan en la lista pasada por parámetro.
-            //Si no deseo mostrar alguna columna, simplemente la borro de esta lista.
-            @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
-                new List<string>() { "Nombre", "Localidad", "Id", "Direccion", "Apellido", "Email", "Telefono" }) //Posiciones
-            )
-        ],
-        //Por defecto cargo una página
-        aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "@Url.Action("SearchDataTable")",
-            type: 'POST' //Por defecto utiliza GET
-        },
-        deferLoading: @ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
-        searchDelay: 500,   //Se realiza una búsqueda cada medio segundo, siempre y cuando se haya ingresado algun valor en el campo de búsqueda. 
-                            //https://datatables.net/forums/discussion/23970/1-10-3-searchdelay-not-working-properly
+<code class="language-javascript"> &lt;script src="https://cdn.datatables.net/responsive/1.0.7/js/dataTables.responsive.min.js"&gt;&lt;/script&gt;
+                
+&lt;script type=&quot;text/javascript&quot;&gt;
+    $(document).ready(function () {
+        $('#example').DataTable({
+            aoColumnDefs: [
+                //ATENCION: Ver que ubicamos la columna ID en segundo lugar, ya que ser&#225; la que vamos a ocultar.
+                //Siempre es bueno dejar la primer columna (Nombre en este caso) visible, ya que si nuestra tabla tiene childRows (Email en este caso),
+                //no veremos el boton verde para desplegarlas.
+                @@Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
+                    new List&lt;string&gt;() { &quot;Nombre&quot;, &quot;Id&quot;, &quot;Apellido&quot;, &quot;Telefono&quot;, &quot;Direccion&quot;, &quot;Localidad&quot;, &quot;Email&quot;  } //Posiciones
+                )),
+                {
+                    &quot;class&quot;: &quot;all&quot;, //Con esta clase, esta columna estara siempre visible aunque achiquemos la pantalla.
+                    &quot;render&quot;: function (data, type, row) {
+                    var retorno = '&lt;a title=&quot;Eliminar&quot; onclick=&quot;alert(\'Eliminar el contacto con ID = ' + row['Id'] + '\') &quot; &gt;';
+                    retorno += '    &lt;span class=&quot;glyphicon glyphicon-remove&quot; /&gt;';
+                    retorno += '&lt;/a&gt;';
+                    return retorno;
+                },
+                &quot;aTargets&quot;: [7] //Ubico esta nueva fila al final, eran en total 7, que iban del 0 al 6. Ahora con esta, tenemos 8 columnas.
+                },
+                { &quot;class&quot;: &quot;never&quot;, &quot;aTargets&quot;: [1] }, //Con la calse 'never' indicamos que esa columna no estara nunca visible.
+                { &quot;class&quot;: &quot;none&quot;, &quot;aTargets&quot;: [6] }, //Con la clase 'none' indicamos que esa columna solo estara disponible como childRow.
+                
+            ],
+            responsive : true,
+            aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = &quot;yyyy/MM/dd&quot; })),
+        });
     });
-});</code>
+&lt;/script&gt;</code>
             </pre>
         </div>
 
-        <div role="tabpanel" class="tab-pane" id="css1">...</div>
+        <div role="tabpanel" class="tab-pane" id="css1">
+            <pre>
+<code class="language-css">&lt;link href=&quot;https://cdn.datatables.net/responsive/1.0.7/css/responsive.dataTables.min.css&quot; rel=&quot;stylesheet&quot; /&gt;</code>
+            </pre>
+        </div>
         <div role="tabpanel" class="tab-pane" id="csharp1">
             <pre>
 <code class="language-csharp">public ActionResult Ejemplo5()
 {   
-    List&lt;Contacto&gt; model = Contactos.Skip(0).Take(10).ToList();
-    ViewBag.TotalFilas = Contactos.Count;
-    return View(model);
+    return View(Contactos);
 }</code>
             </pre>
         </div>
         <div role="tabpanel" class="tab-pane" id="csharp1_2">
             <pre>
-<code class="language-csharp">[HttpPost]
-public JsonResult SearchDataTable()
+<code class="language-csharp">public static string ColumnsFromModel(Type modelType, List&lt;string&gt; ColumnsOrder = null)
 {
-    DataTablesRequest req = DataTablesRequest.ExtractFormRequest(Request.Form);
+    PropertyInfo[] props = modelType.GetProperties(); //Obtengo todos los atributos de la clase
+    int cantidadDeColumnas = ColumnsOrder == null ? props.Count() : ColumnsOrder.Count;
     
-    List&lt;string&gt; listOrderBy = new List&lt;string&gt;();
-    foreach (int orderColumnIndex in req.orderColumn)
+    string[] listHeaderDefinition = new string[cantidadDeColumnas];
+    for(int i= 0; i &lt; props.Count(); i++)
     {
-        string columnToOrder = req.columnsName[orderColumnIndex];
-        string orderDirection = req.orderDir[req.orderColumn.IndexOf(orderColumnIndex)];
-    }
-    string orderBy = String.Join(&quot;,&quot;, listOrderBy);
-    List&lt;int&gt; searchableIndex = new List&lt;int&gt;();
-    for (int i = 0; i &lt; req.columnsSearchable.Count; i++)
-    {
-        if (req.columnsSearchable[i])
+        PropertyInfo prop = props[i];
+        string attributeName = prop.Name;
+        //Extraigo el DisplayAttribute, el cual utilizamos para definir cual sera el titulo a mostrar de esa columna.
+        //En caso de que no tenga, utilizo como displayName el nombre del atributo.
+        DisplayAttribute displayAttribute = prop.GetCustomAttributes(typeof(DisplayAttribute), false).FirstOrDefault() as DisplayAttribute;
+        string displayName = displayAttribute != null ? displayAttribute.Name : attributeName.ToLower(); //Lo extraigo.
+        //Segun el tipo del atributo, lo mapeo a su correspondiente tipo en Datatables
+        string sType = prop.PropertyType.ToString().ToLower();
+        string sTipo = &quot;string&quot;; //Type por defecto.
+        if (sType.IndexOf(&quot;int&quot;) &gt;= 0 || sType.IndexOf(&quot;double&quot;) &gt;= 0 || sType.IndexOf(&quot;float&quot;) &gt;= 0 ||
+            sType.IndexOf(&quot;real&quot;) &gt;= 0 || sType.IndexOf(&quot;single&quot;) &gt;= 0)
         {
-            searchableIndex.Add(i);
+            sTipo = &quot;num&quot;;
         }
-    }
-    string valorBusqueda = req.searchValue;
-    int salteo = req.start;
-    int muestro = req.length;
-    
-    List&lt;Contacto&gt; model = Contactos.Skip(salteo).Take(muestro).ToList();
-    string json = JsonConvert.SerializeObject(model, Formatting.None, new IsoDateTimeConverter() { DateTimeFormat = &quot;dd/MM/yyyy&quot; });
-    DataTablesResponse respuesta = new DataTablesResponse();
-    respuesta.data = model;//json;
-    respuesta.draw = req.draw;
-    respuesta.recordsFiltered = Contactos.Count(); //Ver de aplicar bien el count de los datos filtrados.
-    respuesta.recordsTotal = Contactos.Count();
-    return Json(respuesta, JsonRequestBehavior.AllowGet);
-}</code>
-            </pre>
-        </div>
-        <div role="tabpanel" class="tab-pane" id="csharp1_3">
-            <pre>
-<code class="language-csharp">public class DataTablesRequest
-{
-    public int draw;
-    public int start;
-    public int length;
-    public string searchValue;
-    public bool searchRegex;
-    public List&lt;int&gt; orderColumn = new List&lt;int&gt;();
-    public List&lt;string&gt; orderDir = new List&lt;string&gt;();
-    public List&lt;string&gt; columnsData = new List&lt;string&gt;();
-    public List&lt;string&gt; columnsName = new List&lt;string&gt;();
-    public List&lt;bool&gt; columnsSearchable = new List&lt;bool&gt;();
-    public List&lt;bool&gt; columnsOrderable = new List&lt;bool&gt;();
-    public List&lt;string&gt; columnsSearchValue = new List&lt;string&gt;();
-    public List&lt;bool&gt; columnsSearchRegex = new List&lt;bool&gt;();
-    public static DataTablesRequest ExtractFormRequest(System.Collections.Specialized.NameValueCollection queryString)
-    {
-        DataTablesRequest retorno = new DataTablesRequest();
-        retorno.draw = Int32.Parse(queryString[&quot;draw&quot;]);
-        retorno.start = Int32.Parse(queryString[&quot;start&quot;]);
-        retorno.length = Int32.Parse(queryString[&quot;length&quot;]);
-        retorno.searchValue = queryString[&quot;search[value]&quot;];
-        retorno.searchValue = retorno.searchValue.Replace(&quot;'&quot;, &quot;''&quot;);
-        retorno.searchRegex = bool.Parse(queryString[&quot;search[regex]&quot;]);
-        List&lt;string&gt; keysColumns = queryString.AllKeys.Where(k =&gt; k.ToLower().IndexOf(&quot;columns&quot;) == 0).ToList();
-        foreach (string key in keysColumns)
+        else if (sType.IndexOf(&quot;date&quot;) &gt;= 0)
         {
-            var sIndex = System.Text.RegularExpressions.Regex.Match(key, @@&quot;\[([^]]*)\]&quot;).Groups[1].Value;
-            int index = Int32.Parse(sIndex);
-            string sNombre = key.Substring(key.IndexOf(&quot;]&quot;) + 1).Replace(&quot;[&quot;, &quot;&quot;).Replace(&quot;]&quot;, &quot;&quot;).ToLower();
-            switch (sNombre)
-            {
-                case &quot;data&quot;: retorno.columnsData.Add(queryString[key]); break;
-                case &quot;name&quot;: retorno.columnsName.Add(queryString[key]); break;
-                case &quot;searchable&quot;: retorno.columnsSearchable.Add(bool.Parse(queryString[key])); break;
-                case &quot;orderable&quot;: retorno.columnsOrderable.Add(bool.Parse(queryString[key])); break;
-                case &quot;searchvalue&quot;: retorno.columnsSearchValue.Add(queryString[key]); break;
-                case &quot;searchregex&quot;: retorno.columnsSearchRegex.Add(bool.Parse(queryString[key])); break;
-            }
+            sTipo = &quot;custom-date&quot;; //Este es un tipo customizado, creado para que las fechas se adapten al formato dd/MM/yyyy
         }
-        List&lt;string&gt; keysOrders = queryString.AllKeys.Where(k =&gt; k.ToLower().IndexOf(&quot;order&quot;) == 0).ToList();
-        foreach (string key in keysOrders)
+        int position = i;   //Si no definí ColumnsOrder, entonces las columnas se mostraran en el orden en el que estan 
+                            //definidos los atributos.        
+        if (ColumnsOrder != null)
         {
-            var sIndex = System.Text.RegularExpressions.Regex.Match(key, @@&quot;\[([^]]*)\]&quot;).Groups[1].Value;
-            int index = Int32.Parse(sIndex);
-            string sNombre = key.Substring(key.IndexOf(&quot;]&quot;) + 1).Replace(&quot;[&quot;, &quot;&quot;).Replace(&quot;]&quot;, &quot;&quot;).ToLower();
-            switch (sNombre)
-            {
-                case &quot;column&quot;: retorno.orderColumn.Add(Int32.Parse(queryString[key])); break;
-                case &quot;dir&quot;: retorno.orderDir.Add(queryString[key]); break;
-            }
+            position = ColumnsOrder.FindIndex(c =&gt; c.ToLower().Trim().Equals(attributeName.ToLower().Trim()));
         }
-        return retorno;
+        if(position &gt;= 0) //position sera &lt; 0, solo si no inclui a esta columna dentro de &quot;ColumnsOrder&quot;
+            listHeaderDefinition[position] = &quot;\t\t{ \&quot;aTargets\&quot;: [&quot;+ position + &quot;], \&quot;name\&quot;: \&quot;&quot; + attributeName + &quot;\&quot;, \&quot;title\&quot;: \&quot;&quot; + displayName + &quot;\&quot;, \&quot;type\&quot;: \&quot;&quot; + sTipo + &quot;\&quot;, \&quot;data\&quot;: \&quot;&quot; + attributeName + &quot;\&quot; }&quot;;
     }
-}
-public class DataTablesResponse
-{
-    public int draw;
-    public int recordsTotal;
-    public int recordsFiltered;
-    public IEnumerable&lt;Object&gt; data;
-    public string error;
+    string headerDefinition = String.Join(&quot;,\n&quot;, listHeaderDefinition);            
+    return headerDefinition;
 }</code>
             </pre>
         </div>
