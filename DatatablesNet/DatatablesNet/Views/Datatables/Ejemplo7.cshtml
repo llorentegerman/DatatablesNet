@@ -86,10 +86,10 @@
         processing: true,
         serverSide: true,
         ajax: {
-            url: "@Url.Action("SearchDataTable")",
+            url: "@@Url.Action("SearchDataTable")",
             type: 'POST' //Por defecto utiliza GET
         },
-        deferLoading: @ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
+        deferLoading: @@ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
         searchDelay: 500,   //Se realiza una búsqueda cada medio segundo, siempre y cuando se haya ingresado algun valor en el campo de búsqueda. 
                             //https://datatables.net/forums/discussion/23970/1-10-3-searchdelay-not-working-properly
     });

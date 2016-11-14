@@ -123,6 +123,14 @@ namespace DatatablesNet.Controllers
             return View(model);
         }
 
+        // GET: Datatables/Ejemplo8
+        public ActionResult Ejemplo8()
+        {
+            List<Contacto> model = Contactos.Skip(0).Take(10).ToList();
+            ViewBag.TotalFilas = Contactos.Count;
+            return View(model);
+        }
+
         [HttpPost]
         public JsonResult SearchDataTable()
         {
@@ -133,21 +141,44 @@ namespace DatatablesNet.Controllers
             int salteo = req.start;
             int muestro = req.length;
 
-            //Busco coincidencias por todos los campos del Modelo.
-            var consultaBasica = Contactos.Where(c =>
-                    c.Apellido.ToLower().IndexOf(valorBusqueda) >= 0 ||
-                    c.Direccion.ToLower().IndexOf(valorBusqueda) >= 0 ||
-                    c.Email.ToLower().IndexOf(valorBusqueda) >= 0 ||
-                    c.Id.ToString().IndexOf(valorBusqueda) >= 0 ||
-                    c.Localidad.ToLower().IndexOf(valorBusqueda) >= 0 ||
-                    c.Nombre.ToLower().IndexOf(valorBusqueda) >= 0 ||
-                    c.Telefono.ToLower().IndexOf(valorBusqueda) >= 0
-            );
+            //Extraigo los campos del modelo, para armar tanto la búsqueda, como el ordenamiento.
+            PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(typeof(Contacto));
 
-            var consulta = consultaBasica.Skip(salteo).Take(muestro);
+            /*
+            La lógica de la búsqueda es simple, por cada uno de los campos que admiten ser buscados o campos searchables (por defecto todos),
+            me fijo si en su contenido contienen el valorBusqueda, que es el valor ingresado en el campo de búsqueda, lo hacemos mediante
+                campo.ToString().ToLower().IndexOf(valorBusqueda) >= 0
+            Como hacemos esto por cada uno de los campos, vamos concatenando cada "consulta" con un OR, por lo que, con que al menos
+            una de todas sea verdadera, la fila en cuestión estará visible.
 
-            PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(typeof(Contacto)); //Extraigo los campos del modelo, para aplicar métodos de ordenamiento
-            
+            Notar, que arranco la construccion de la consulta con un False, por qué?
+            Esta consulta se podria traducir a:
+                false OR campo1.ToString().ToLower().IndexOf(valorBusqueda) >= 0 OR campo2.ToString().ToLower().IndexOf(valorBusqueda) >= 0
+            Con que una de las condiciones anteriores se cumpla, es suficiente para que esa fila sea visible.
+            Pero si arrancaramos la consulta con un TRUE, nos quedaria asi:
+                 true OR campo1.ToString().ToLower().IndexOf(valorBusqueda) >= 0 OR campo2.ToString().ToLower().IndexOf(valorBusqueda) >= 0
+            En este caso, todas, pero todas las filas seran visibles, porque todas retornan TRUE.
+            */
+            var predicateModel = PredicateBuilder.False<Contacto>();
+
+            //Por cada una de las columnas me fijo si es searchable y construyo la consulta.
+            for (int i = 0; i < req.columnsSearchable.Count; i++)
+            {
+                if (req.columnsSearchable[i]) //Si es searchable, entonces...
+                {
+                    string columnSearchable = req.columnsName[i].ToLower(); //Nombre de la columna
+                    PropertyDescriptor prop = properties.Find(columnSearchable, true); //Campo correspondiente
+                    //Voy armando la consulta concatenando con un OR.
+                    predicateModel = predicateModel.Or(x => prop.GetValue(x).ToString().ToLower().IndexOf(valorBusqueda) >= 0);
+                }
+            }
+
+            //Agrego la consulta a la lista. Notar que convertimos la lista a IQueryable haciendo AsQueryable().
+            //Si aplicaramos la consulta sobre Entity Framework esto no haria falta.
+            var consultaBasica = Contactos.AsQueryable().Where(predicateModel);
+
+            int cantidadFiltrados = consultaBasica.Count();
+
             foreach (int orderColumnIndex in req.orderColumn)
             {
                 //Puedo ordenar por mas de un campo, por lo tanto, por cada uno, extraigo el nombre,
@@ -156,24 +187,14 @@ namespace DatatablesNet.Controllers
                 string orderDirection = req.orderDir[req.orderColumn.IndexOf(orderColumnIndex)].ToLower();
                 PropertyDescriptor prop = properties.Find(columnToOrder, true);
                 if (orderDirection.Equals("asc"))
-                    consulta = consulta.OrderBy(x => prop.GetValue(x));
+                    consultaBasica = consultaBasica.OrderBy(x => prop.GetValue(x));
                 else
-                    consulta = consulta.OrderByDescending(x => prop.GetValue(x));
+                    consultaBasica = consultaBasica.OrderByDescending(x => prop.GetValue(x));
             }
 
-            //Extraigo las columnas searchables, esto lo voy a utilizar en el método generico.
-            List<int> searchableIndex = new List<int>();
-            for (int i = 0; i < req.columnsSearchable.Count; i++)
-            {
-                if (req.columnsSearchable[i])
-                {
-                    searchableIndex.Add(i);
-                }
-            }
-            
-            List<Contacto> model = consulta.ToList(); //Realizo la consulta
+            consultaBasica = consultaBasica.Skip(salteo).Take(muestro);
 
-            int cantidadFiltrados = consultaBasica.Count();
+            List<Contacto> model = consultaBasica.ToList(); //Realizo la consulta
 
             string json = JsonConvert.SerializeObject(model, Formatting.None, new IsoDateTimeConverter() { DateTimeFormat = "dd/MM/yyyy" });
 

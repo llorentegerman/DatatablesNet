@@ -1,0 +1,269 @@
+﻿@model IEnumerable<DatatablesNet.Models.Contacto>
+@{
+    ViewBag.Title = "Ejemplo8";
+}
+
+@section headSection {
+}
+
+@section scripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#example').DataTable({
+                columns: [
+                    @Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto)))
+                ],
+                //Por defecto cargo una página
+                aaData: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "@Url.Action("SearchDataTable")",
+                    type: 'POST' //Por defecto utiliza GET
+                },
+                deferLoading: @ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
+                searchDelay: 500, 
+            });
+
+        });
+    </script>
+}
+
+<h2>Ejemplo 8 - Server Side, Búsqueda y Ordenamiento Genéricos</h2>
+
+
+<p>
+    En este ejemplo vamos a ver como realizar busquedas y ordenamientos del lado del servidor con el mismo método independientemente del
+    Modelo con el que estemos trabajando.<br />
+    Se modifica un poco el método SearchDataTable.<br />
+    Se incorpora una nueva clase, <a href="http://www.c-sharpcorner.com/UploadFile/c42694/dynamic-query-in-linq-using-predicate-builder/" target="_blank">PredicateBuilder</a>, 
+    la cual utilizamos para hacer consultas dinamicas en Linq.
+</p>
+<a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+    View Source Code - Ver Codigo Fuente
+</a>
+<div class="collapse" id="collapseExample">
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active"><a href="#html1" aria-controls="html1" role="tab" data-toggle="tab">HTML</a></li>
+        <li role="presentation"><a href="#javascript1" aria-controls="javascript1" role="tab" data-toggle="tab">Javascript</a></li>
+        <li role="presentation"><a href="#css1" aria-controls="css1" role="tab" data-toggle="tab">CSS</a></li>
+        <li role="presentation"><a href="#csharp1" aria-controls="csharp1" role="tab" data-toggle="tab">C# (Backend)</a></li>
+        <li role="presentation"><a href="#csharp1_2" aria-controls="csharp1_2" role="tab" data-toggle="tab">C# (SearchDataTable)</a></li>
+        <li role="presentation"><a href="#csharp1_3" aria-controls="csharp1_3" role="tab" data-toggle="tab">C# (PredicateBuilder)</a></li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="html1">
+            <pre>
+<code class="language-html">&lt;table id=&quot;example&quot; class=&quot;display&quot; cellspacing=&quot;0&quot; width=&quot;100%&quot;&gt;
+    &lt;thead&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;        
+    &lt;/tbody&gt;
+&lt;/table&gt;</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="javascript1">
+            <pre>
+<code class="language-javascript">$(document).ready(function () {
+    $('#example').DataTable({
+        columns: [
+            //Extraigo la definición de las columnas desde el mismo modelo.
+            //Posiciono las columnas según el orden en el que aparezcan en la lista pasada por parámetro.
+            //Si no deseo mostrar alguna columna, simplemente la borro de esta lista.
+            @@Html.Raw(DatatablesNet.Auxiliares.DataTablesAux.ColumnsFromModel(typeof(DatatablesNet.Models.Contacto),
+                new List<string>() { "Nombre", "Localidad", "Id", "Direccion", "Apellido", "Email", "Telefono" }) //Posiciones
+            )
+        ],
+        //Por defecto cargo una página
+        aaData: @@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model, Newtonsoft.Json.Formatting.None, new Newtonsoft.Json.Converters.IsoDateTimeConverter() { DateTimeFormat = "yyyy/MM/dd" })),
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: "@@Url.Action("SearchDataTable")",
+            type: 'POST' //Por defecto utiliza GET
+        },
+        deferLoading: @@ViewBag.TotalFilas, //Con este parametro le decimos a DataTables, cual es el tamaño real de nuestro set de datos.
+        searchDelay: 500,   //Se realiza una búsqueda cada medio segundo, siempre y cuando se haya ingresado algun valor en el campo de búsqueda. 
+                            //https://datatables.net/forums/discussion/23970/1-10-3-searchdelay-not-working-properly
+    });
+});</code>
+            </pre>
+        </div>
+
+        <div role="tabpanel" class="tab-pane" id="css1">...</div>
+        <div role="tabpanel" class="tab-pane" id="csharp1">
+            <pre>
+<code class="language-csharp">public ActionResult Ejemplo8()
+{   
+    List&lt;Contacto&gt; model = Contactos.Skip(0).Take(10).ToList();
+    ViewBag.TotalFilas = Contactos.Count;
+    return View(model);
+}</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="csharp1_2">
+            <pre>
+<code class="language-csharp">[HttpPost]
+public JsonResult SearchDataTable()
+{
+    DataTablesRequest req = DataTablesRequest.ExtractFormRequest(Request.Form);
+    string valorBusqueda = req.searchValue.ToLower();
+    int salteo = req.start;
+    int muestro = req.length;
+    //Extraigo los campos del modelo, para armar tanto la b&#250;squeda, como el ordenamiento.
+    PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(typeof(Contacto));
+    /*
+    La l&#243;gica de la b&#250;squeda es simple, por cada uno de los campos que admiten ser buscados o campos searchables (por defecto todos),
+    me fijo si en su contenido contienen el valorBusqueda, que es el valor ingresado en el campo de b&#250;squeda, lo hacemos mediante
+        campo.ToString().ToLower().IndexOf(valorBusqueda) &gt;= 0
+    Como hacemos esto por cada uno de los campos, vamos concatenando cada &quot;consulta&quot; con un OR, por lo que, con que al menos
+    una de todas sea verdadera, la fila en cuesti&#243;n estar&#225; visible.
+    Notar, que arranco la construccion de la consulta con un False, por qu&#233;?
+    Esta consulta se podria traducir a:
+        false OR campo1.ToString().ToLower().IndexOf(valorBusqueda) &gt;= 0 OR campo2.ToString().ToLower().IndexOf(valorBusqueda) &gt;= 0
+    Con que una de las condiciones anteriores se cumpla, es suficiente para que esa fila sea visible.
+    Pero si arrancaramos la consulta con un TRUE, nos quedaria asi:
+         true OR campo1.ToString().ToLower().IndexOf(valorBusqueda) &gt;= 0 OR campo2.ToString().ToLower().IndexOf(valorBusqueda) &gt;= 0
+    En este caso, todas, pero todas las filas seran visibles, porque todas retornan TRUE.
+    */
+    var predicateModel = PredicateBuilder.False&lt;Contacto&gt;();
+    //Por cada una de las columnas me fijo si es searchable y construyo la consulta.
+    for (int i = 0; i &lt; req.columnsSearchable.Count; i++)
+    {
+        if (req.columnsSearchable[i]) //Si es searchable, entonces...
+        {
+            string columnSearchable = req.columnsName[i].ToLower(); //Nombre de la columna
+            PropertyDescriptor prop = properties.Find(columnSearchable, true); //Campo correspondiente
+            //Voy armando la consulta concatenando con un OR.
+            predicateModel = predicateModel.Or(x =&gt; prop.GetValue(x).ToString().ToLower().IndexOf(valorBusqueda) &gt;= 0);
+        }
+    }
+    //Agrego la consulta a la lista. Notar que convertimos la lista a IQueryable haciendo AsQueryable().
+    //Si aplicaramos la consulta sobre Entity Framework esto no haria falta.
+    var consultaBasica = Contactos.AsQueryable().Where(predicateModel);
+    int cantidadFiltrados = consultaBasica.Count();
+    foreach (int orderColumnIndex in req.orderColumn)
+    {
+        //Puedo ordenar por mas de un campo, por lo tanto, por cada uno, extraigo el nombre,
+        //me fijo si es ascendente o descendente, y concateno el ordenamiento a la consulta.
+        string columnToOrder = req.columnsName[orderColumnIndex].ToLower();
+        string orderDirection = req.orderDir[req.orderColumn.IndexOf(orderColumnIndex)].ToLower();
+        PropertyDescriptor prop = properties.Find(columnToOrder, true);
+        if (orderDirection.Equals(&quot;asc&quot;))
+            consultaBasica = consultaBasica.OrderBy(x =&gt; prop.GetValue(x));
+        else
+            consultaBasica = consultaBasica.OrderByDescending(x =&gt; prop.GetValue(x));
+    }
+    consultaBasica = consultaBasica.Skip(salteo).Take(muestro);
+    List&lt;Contacto&gt; model = consultaBasica.ToList(); //Realizo la consulta
+    string json = JsonConvert.SerializeObject(model, Formatting.None, new IsoDateTimeConverter() { DateTimeFormat = &quot;dd/MM/yyyy&quot; });
+    DataTablesResponse respuesta = new DataTablesResponse();
+    respuesta.data = model;
+    respuesta.draw = req.draw;
+    respuesta.recordsFiltered = cantidadFiltrados;
+    respuesta.recordsTotal = Contactos.Count();
+    return Json(respuesta, JsonRequestBehavior.AllowGet);
+}</code>
+            </pre>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="csharp1_3">
+            <pre>
+<code class="language-csharp">using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Web;
+namespace DatatablesNet.Auxiliares
+{
+    /// &lt;summary&gt;  
+    /// Enables the efficient, dynamic composition of query predicates.  
+    /// &lt;/summary&gt;  
+    /// http://www.c-sharpcorner.com/UploadFile/c42694/dynamic-query-in-linq-using-predicate-builder/
+    public static class PredicateBuilder
+    {
+        /// &lt;summary&gt;  
+        /// Creates a predicate that evaluates to true.  
+        /// &lt;/summary&gt;  
+        public static Expression&lt;Func&lt;T, bool&gt;&gt; True&lt;T&gt;() { return param =&gt; true; }
+        /// &lt;summary&gt;  
+        /// Creates a predicate that evaluates to false.  
+        /// &lt;/summary&gt;  
+        public static Expression&lt;Func&lt;T, bool&gt;&gt; False&lt;T&gt;() { return param =&gt; false; }
+        /// &lt;summary&gt;  
+        /// Creates a predicate expression from the specified lambda expression.  
+        /// &lt;/summary&gt;  
+        public static Expression&lt;Func&lt;T, bool&gt;&gt; Create&lt;T&gt;(Expression&lt;Func&lt;T, bool&gt;&gt; predicate) { return predicate; }
+        /// &lt;summary&gt;  
+        /// Combines the first predicate with the second using the logical &quot;and&quot;.  
+        /// &lt;/summary&gt;  
+        public static Expression&lt;Func&lt;T, bool&gt;&gt; And&lt;T&gt;(this Expression&lt;Func&lt;T, bool&gt;&gt; first, Expression&lt;Func&lt;T, bool&gt;&gt; second)
+        {
+            return first.Compose(second, Expression.AndAlso);
+        }
+        /// &lt;summary&gt;  
+        /// Combines the first predicate with the second using the logical &quot;or&quot;.  
+        /// &lt;/summary&gt;  
+        public static Expression&lt;Func&lt;T, bool&gt;&gt; Or&lt;T&gt;(this Expression&lt;Func&lt;T, bool&gt;&gt; first, Expression&lt;Func&lt;T, bool&gt;&gt; second)
+        {
+            return first.Compose(second, Expression.OrElse);
+        }
+        /// &lt;summary&gt;  
+        /// Negates the predicate.  
+        /// &lt;/summary&gt;  
+        public static Expression&lt;Func&lt;T, bool&gt;&gt; Not&lt;T&gt;(this Expression&lt;Func&lt;T, bool&gt;&gt; expression)
+        {
+            var negated = Expression.Not(expression.Body);
+            return Expression.Lambda&lt;Func&lt;T, bool&gt;&gt;(negated, expression.Parameters);
+        }
+        /// &lt;summary&gt;  
+        /// Combines the first expression with the second using the specified merge function.  
+        /// &lt;/summary&gt;  
+        static Expression&lt;T&gt; Compose&lt;T&gt;(this Expression&lt;T&gt; first, Expression&lt;T&gt; second, Func&lt;Expression, Expression, Expression&gt; merge)
+        {
+            // zip parameters (map from parameters of second to parameters of first)  
+            var map = first.Parameters
+                .Select((f, i) =&gt; new { f, s = second.Parameters[i] })
+                .ToDictionary(p =&gt; p.s, p =&gt; p.f);
+            // replace parameters in the second lambda expression with the parameters in the first  
+            var secondBody = ParameterRebinder.ReplaceParameters(map, second.Body);
+            // create a merged lambda expression with parameters from the first expression  
+            return Expression.Lambda&lt;T&gt;(merge(first.Body, secondBody), first.Parameters);
+        }
+        class ParameterRebinder : ExpressionVisitor
+        {
+            readonly Dictionary&lt;ParameterExpression, ParameterExpression&gt; map;
+            ParameterRebinder(Dictionary&lt;ParameterExpression, ParameterExpression&gt; map)
+            {
+                this.map = map ?? new Dictionary&lt;ParameterExpression, ParameterExpression&gt;();
+            }
+            public static Expression ReplaceParameters(Dictionary&lt;ParameterExpression, ParameterExpression&gt; map, Expression exp)
+            {
+                return new ParameterRebinder(map).Visit(exp);
+            }
+            protected override Expression VisitParameter(ParameterExpression p)
+            {
+                ParameterExpression replacement;
+                if (map.TryGetValue(p, out replacement))
+                {
+                    p = replacement;
+                }
+                return base.VisitParameter(p);
+            }
+        }
+    }
+}</code>
+            </pre>
+        </div>
+    </div>
+
+</div>
+
+<br /><br />
+
+<table id="example" class="display" cellspacing="0" width="100%">
+    <thead></thead>
+    <tbody></tbody>
+</table>
